@@ -1,26 +1,39 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../contexts/AuthProvider';
 
 const Login = () => {
+    const {login} = useContext(AuthContext)
     const [loginError, setlogInError] = useState('')
-    const {register, handleSubmit, formState:{errors}, reset} = useForm();
+    const {register, handleSubmit, formState:{errors}} = useForm();
+    const navigate = useNavigate();
 
-    const handleLogin= ()=>{
-
+    const handleLogin = (data)=>{
+        setlogInError("")
+        login(data.email, data.password)
+        .then(result=>{
+            const user = result.user
+            console.log(user)
+            navigate('/')
+        })
+        .catch(error =>{
+            console.log(error.message)
+            setlogInError(error.message)
+        });
     }
 
-    const handleGoogleSignIn =()=>{
-        // googleSignin()
-        // .then(result=>{
-        //     const user = result.user;
-        //     setLoginUserEmail(user.email)
-        //     console.log(user);
-        //     saveUser(user?.displayName, user?.email)
-        //     toast.success('Login Successfully');
-        // })
-        // .catch(error=>console.log(error))
-    };
+    // const handleGoogleSignIn =()=>{
+    //     // googleSignin()
+    //     // .then(result=>{
+    //     //     const user = result.user;
+    //     //     setLoginUserEmail(user.email)
+    //     //     console.log(user);
+    //     //     saveUser(user?.displayName, user?.email)
+    //     //     toast.success('Login Successfully');
+    //     // })
+    //     // .catch(error=>console.log(error))
+    // };
 
     return (
         <div className=' flex justify-center items-center'>
@@ -41,7 +54,7 @@ const Login = () => {
                    <label className='label'><span className='label-text'>Password</span></label>
                    <input type='password' {...register("password",{
                     required:"password is required",
-                    minLength:{value:6, message:"password must be 6 characters or longer"}
+                    
                    })} className='input input-bordered w-full' />
                    {errors.password && <p className='text-error'>{errors.password?.message}</p>}
                    </div> 
@@ -52,8 +65,8 @@ const Login = () => {
                     </div>
                 </form>
                 <p className='mt-3'>New to Chate Bot <Link className='text-info' to ='/signup'>Create an Account</Link></p>
-                <div className="divider">OR</div>
-                <button onClick={handleGoogleSignIn} className='btn btn-outline w-full'>CONTINUE WITH GOOGLE</button>
+                {/* <div className="divider">OR</div>
+                <button onClick={handleGoogleSignIn} className='btn btn-outline w-full'>CONTINUE WITH GOOGLE</button> */}
             </div>
         </div>
     );

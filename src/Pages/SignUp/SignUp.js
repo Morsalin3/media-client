@@ -1,13 +1,47 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { AuthContext } from '../../contexts/AuthProvider';
 
 const SignUp = () => {
+    const {createUser, updateUser} = useContext(AuthContext)
     const [signUpError, setSignUpError] = useState('')
     const {register, handleSubmit, reset, formState:{errors}} = useForm();
 
-    const handleSignUp = ()=>{
+    const handleSignUp = (data)=>{
+        setSignUpError("")
+        createUser(data.email, data.password)
+        .then(result=>{
+            const user = result.user;
+            console.log(user)
+            toast.success('user create successfully')
+            const userInfo = {
+                displayName : data.name
+            }
+            updateUser(userInfo)
+            .then(()=>{
+                saveUser(data.name, data.email, data.institute, data.address)
+            })
+        })
+        .catch(error=>{
+            setSignUpError(error.message)
+        })
+    }
 
+    const saveUser =(name, email, institute, address)=>{
+        const user ={name, email, institute, address};
+        fetch('https://media-server-three.vercel.app/user',{
+            method: 'POST',
+            headers:{
+                'content-type':'application/json'
+            },
+            body: JSON.stringify(user)
+        })
+        .then(res=>res.json())
+        .then(data=>{
+            console.log('save user data',data);
+        })
     }
 
     return (
@@ -19,11 +53,11 @@ const SignUp = () => {
                         <label className='label'><span className='label-text'>Name</span></label>
                         <input type='text'
                             {...register("name", {
-                                required: "Name address is required"
+                                required: "Name is required"
                             })}
 
                             className='input input-bordered w-full' />
-                        {errors.Name && <p className='text-error'>{errors.Name?.message}</p>}
+                        {errors.name && <p className='text-error'>{errors.name?.message}</p>}
                     </div>
                     <div className='form-control w-full max-w-xs'>
                         <label className='label'><span className='label-text'>Email</span></label>
@@ -39,7 +73,7 @@ const SignUp = () => {
                         <label className='label'><span className='label-text'>Institute Name</span></label>
                         <input type='text'
                             {...register("institute", {
-                                required: "institute address is required"
+                                required: "institute name is required"
                             })}
 
                             className='input input-bordered w-full' />
@@ -49,7 +83,7 @@ const SignUp = () => {
                         <label className='label'><span className='label-text'>Address</span></label>
                         <input type='text'
                             {...register("address", {
-                                required: "Address address is required"
+                                required: "address is required"
                             })}
 
                             className='input input-bordered w-full' />

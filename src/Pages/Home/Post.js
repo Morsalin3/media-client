@@ -1,14 +1,52 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import msg from '../../assets/msg.png'
+import { AuthContext } from '../../contexts/AuthProvider';
 
 const Post = () => {
-
+    const {user} = useContext(AuthContext)
     const { register, handleSubmit, reset } = useForm();
+    const imageHostKey = process.env.REACT_APP_imgbb_key;
 
-    const handleForm = () => {
+    const navigate = useNavigate();
 
+    const handleForm = (data) => {
+        const image = data.image[0]
+        const formData = new FormData();
+        formData.append('image', image);
+        const url =`https://api.imgbb.com/1/upload?key=${imageHostKey}`
+        fetch(url,{
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(imgdata=>{
+            console.log(imgdata)
+            if(imgdata.success){
+                const posts ={
+                    texts: data.message,
+                    image: imgdata.data.url
+                }
+
+                // post data to database
+                fetch('https://media-server-three.vercel.app/posts',{
+                    method: 'POST',
+                    headers: {
+                        'content-type':'application/json',
+                    },
+                    body: JSON.stringify(posts)
+                })
+                .then(res=>res.json())
+                .then(result =>{
+                    console.log(result);
+                    reset();
+                    toast.success(`post added successfully`)
+
+                })
+            }
+        })
     }
 
     return (
@@ -36,7 +74,11 @@ const Post = () => {
                             {/* {errors.img && <p className='text-error'>{errors.img.message}</p>} */}
                         </div>
 
-                        <input className='btn btn-info w-full mt-8' value='ADD POST' type="submit" />
+                       {user?.email?
+                         <input className='btn btn-info w-full mt-8' value='ADD POST' type="submit" />
+                         :
+                         <input className='btn btn-info w-full mt-8' value='Please signup or login first' type="submit" />
+                       }
                     </form>
                 </div>
             </div>
